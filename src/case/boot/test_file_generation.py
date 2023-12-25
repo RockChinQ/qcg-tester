@@ -32,4 +32,3 @@ class TestFileGeneration:
         for file in file_to_check:
             assert os.path.exists(f"resource/QChatGPT/{file}")
 
-        qcg.cleanup_qchatgpt(pwd="resource/")

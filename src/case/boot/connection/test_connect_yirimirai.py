@@ -13,17 +13,13 @@ from src.util import system, config
 class TestConnectYiriMirai:
     @pytest.mark.asyncio
     async def test_connect_yirimirai(self):
-        if os.path.exists("resource/"):
-            qcg.cleanup_qchatgpt(pwd="resource/")
-
-        qcg.setup_qchatgpt(pwd="resource/")
+        qcg.ensure_qchatgpt(pwd="resource/")
 
         system.run_command(
             command="python main.py",
             cwd="resource/QChatGPT",
-            timeout=12,
+            timeout=3,
         )
-        print(time.time(), 11111111)
 
         config.set_config(
             "msg_source_adapter",
@@ -49,8 +45,9 @@ class TestConnectYiriMirai:
             cwd="resource/QChatGPT",
         )
 
-        async def handler(**kwargs):  # 数据包处理器
-            print(kwargs)
+        async def handler(*args, **kwargs):  # 数据包处理器
+            # print(kwargs)
+            pass
 
         mahinst = mah.MiraiAPIHTTPAdapter(  # mock
             handler
@@ -102,5 +99,3 @@ class TestConnectYiriMirai:
             )
         except asyncio.TimeoutError:
             pass
-
-        qcg.cleanup_qchatgpt(pwd="resource/")

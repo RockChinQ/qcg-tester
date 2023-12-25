@@ -4,6 +4,25 @@ import logging
 from . import system
 
 
+def ensure_qchatgpt(
+    pwd: str = ".",
+):
+    """
+    Ensure QChatGPT is setup.
+
+    Args:
+        cwd (str): Working directory.
+    """
+    logging.info("Ensuring QChatGPT is setup...")
+
+    if not os.path.exists(pwd+"/QChatGPT"):
+        setup_qchatgpt(pwd=pwd)
+
+    logging.info("QChatGPT is setup.")
+
+    return
+
+
 def setup_qchatgpt(
     branch: str = None,
     commit: str = None,
