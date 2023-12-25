@@ -5,21 +5,28 @@ from . import system
 
 
 def setup_qchatgpt(
-    branch: str = "master",
-    commit: str = "HEAD",
+    branch: str = None,
+    commit: str = None,
     pwd: str = ".",
 ):
     """
     Setup QChatGPT from GitHub.
 
     Args:
-        branch (str): Branch name.
-        commit (str): Commit hash.
+        cwd (str): Working directory.
     """
     logging.info("Setting up QChatGPT...")
 
+    # Create the directory
     if not os.path.exists(pwd):
         os.makedirs(pwd)
+
+    # 从环境变量中获取分支和提交
+    if branch is None:
+        branch = os.environ['BRANCH'] if 'BRANCH' in os.environ else "master"
+
+    if commit is None:
+        commit = os.environ['COMMIT'] if 'COMMIT' in os.environ else "HEAD"
 
     # Clone the repo
     stdout, stderr = system.run_command(
@@ -50,6 +57,13 @@ def setup_qchatgpt(
 
     logging.info(stdout)
     logging.info(stderr)
+
+    # Install dependencies
+    stdout, stderr = system.run_command(
+        command=f"pip install -r requirements.txt",
+        cwd=pwd+"/QChatGPT",
+        timeout=120,
+    )
 
     logging.info("QChatGPT setup complete.")
 
