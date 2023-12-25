@@ -103,3 +103,4 @@ class TestConnectYiriMirai:
         except asyncio.TimeoutError:
             pass
 
+        qcg.cleanup_qchatgpt(pwd="resource/")
