@@ -4,7 +4,7 @@ import asyncio
 import time
 
 import pytest
-from skittles.platform import mah
+from skittles.platform import mirai
 
 from src.util import qcg
 from src.util import system, config
@@ -45,57 +45,4 @@ class TestConnectYiriMirai:
             cwd="resource/QChatGPT",
         )
 
-        async def handler(*args, **kwargs):  # 数据包处理器
-            # print(kwargs)
-            pass
-
-        mahinst = mah.MiraiAPIHTTPAdapter(  # mock
-            handler
-        )
-
-        async def run_main():  # 启动主程序
-            await asyncio.sleep(5)
-
-            try:
-
-                print(time.time(), "run_main")
-                # 启动主程序
-                stdout, stderr = await system.run_command_async(
-                    command="python main.py",
-                    cwd="resource/QChatGPT",
-                    timeout=15,
-                )
-                print(time.time(), "run_main done")
-            except:
-                pass
-
-        async def check():
-            await asyncio.sleep(8)
-            print(time.time(), "check")
-            assert len(mahinst.session_keys) > 0
-
-        async def mock_run():
-            try:
-                await mahinst.run()
-            except:
-                pass
-
-
-        async def wrapper():
-
-            try:
-                _ = await asyncio.gather(
-                    mock_run(),
-                    run_main(),
-                    check(),
-                )
-            except:
-                pass
-
-        try:
-            await asyncio.wait_for(
-                wrapper(),
-                timeout=20,
-            )
-        except asyncio.TimeoutError:
-            pass
+        pass

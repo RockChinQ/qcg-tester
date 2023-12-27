@@ -1,11 +1,13 @@
 import os
 import json
 import asyncio
+import logging
 import time
 
 import pytest
 
-from skittles.platform import mah
+from skittles.platform import mirai
+from skittles.entity import bot, connection
 
 from src.util import qcg, system, config
 
@@ -22,31 +24,31 @@ class TestGPT35Turbo:
             timeout=3,
         )
 
-        config.set_config(
+        config.ensure_config(
             "msg_source_adapter",
             "'yirimirai'",
             cwd="resource/QChatGPT",
         )
 
-        config.set_config(
+        config.ensure_config(
             "admin_qq",
-            "123456789",
+            "1010553892",
             cwd="resource/QChatGPT",
         )
 
-        config.set_config(
+        config.ensure_config(
             "mirai_http_api_config",
             """{
     "adapter": "WebSocketAdapter",
     "host": "localhost",
     "port": 8182,
     "verifyKey": "yirimirai",
-    "qq": 1234567890
+    "qq": 12345678
 }""",
             cwd="resource/QChatGPT",
         )
 
-        config.set_config(
+        config.ensure_config(
             "completion_api_params",
             """{
     "model": "gpt-3.5-turbo",
@@ -57,7 +59,7 @@ class TestGPT35Turbo:
         api_key = os.environ['OPENAI_API_KEY'] if 'OPENAI_API_KEY' in os.environ else "OPENAI_API_KEY"
         reverse_proxy = os.environ['OPENAI_REVERSE_PROXY'] if 'OPENAI_REVERSE_PROXY' in os.environ else "OPENAI_REVERSE_PROXY"
 
-        config.set_config(
+        config.ensure_config(
             "openai_config",
             f"""{{
     "api_key": {{
@@ -70,75 +72,65 @@ class TestGPT35Turbo:
 
         resp = ''
 
-        async def handler(*args, **kwargs):
-            payload = json.loads(args[1]['body'])
+        bot_account = [
+            bot.Bot(
+                account_id='12345678',
+                nickname='Bot',
+                connection_types=[connection.ConnectionType.FORWARD_WS]
+            )
+        ]
 
-            print(payload)
+        app = mirai.MiraiAPIHTTPAdapter()
 
-            plain_text_message = ''
-
-            for msg in payload['content']['messageChain']:
-                if msg['type'] == 'Plain':
-                    plain_text_message += msg['text']
-
+        @app.action_handler
+        async def handler(bot: bot.Bot, connection_type: connection.ConnectionType, data: str) -> None:
             nonlocal resp
-            resp = plain_text_message
 
-        mahinst = mah.MiraiAPIHTTPAdapter(
-            handler
-        )
+            data = json.loads(data)
 
-        async def run_main():
-            await asyncio.sleep(5)
+            logging.info(f"Received message: {data}, {type(data)}")
 
-            try:
+            resp = ''
 
-                print(time.time(), "run_main")
-                # 启动主程序
-                stdout, stderr = await system.run_command_async(
-                    command="python main.py",
-                    cwd="resource/QChatGPT",
-                    timeout=30,
-                )
-                print(time.time(), "run_main done")
-            except:
-                pass
-        
+            for message in data['content']['messageChain']:
+                if message['type'] == 'Plain':
+                    resp += message['text']
+
         async def test():
-            await asyncio.sleep(10)
-            # print(mahadapter.get_session_keys())
-            # print(mahadapter.session_keys)
-
-            session_key = list(mahinst.get_session_keys())[0]
+            await asyncio.sleep(6)
 
             data = {
-                    "type": "FriendMessage",
-                    "sender": {"id": 1010553892, "nickname": "Rock", "remark": ""},
-                    "messageChain": [
-                        {"type": "Source", "id": 123456, "time": int(time.time())},
-                        {"type": "Plain", "text": "Please reply 'Hello'"},
-                    ],
-                }
+                "type": "FriendMessage",
+                "sender": {"id": 1010553892, "nickname": "Rock", "remark": ""},
+                "messageChain": [
+                    {"type": "Source", "id": 123456, "time": int(time.time())},
+                    {"type": "Plain", "text": "Only reply a 'Hello' to me."},
+                ],
+            }
 
-            await mahinst.send(session_key, data, '-1')
+            await app.emit_event(bots=bot_account, event=data)
+            logging.info("Test message sent.")
 
-        async def wrapper():
-            try:
-                _ = await asyncio.gather(
-                    mahinst.run(),
-                    run_main(),
-                    test(),
-                    return_exceptions=True,
-                )
-            except:
-                pass
+            await asyncio.sleep(20)
 
-        try:
-            await asyncio.wait_for(
-                wrapper(),
-                timeout=40,
+            logging.info('Killing app.')
+            await app.kill()
+
+            assert 'hello' in resp.lower()
+
+        async def launch():
+            await asyncio.sleep(3)
+            logging.info("Launching QChatGPT.")
+            await system.run_command_async(
+                command="python main.py",
+                cwd="resource/QChatGPT",
+                timeout=18,
             )
-        except asyncio.TimeoutError:
-            pass
+            logging.info("QChatGPT killed.")
 
-        assert 'hello' in resp.lower()
+        async def run():
+            tasks = [app.run(bots=bot_account), launch(), test()]
+
+            await asyncio.gather(*tasks)
+
+        await run()
