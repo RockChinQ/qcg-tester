@@ -13,4 +13,6 @@ if __name__ == "__main__":
 
     print(f"Running tests in {dirs}")
     
-    pytest.main(dirs)
+    code = pytest.main(dirs)
+
+    exit(code)
