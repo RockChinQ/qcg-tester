@@ -29,7 +29,6 @@ class TestFileGeneration:
         await system.run_python_with_coverage_async(
             command="main.py",
             cwd="resource/QChatGPT",
-            source="pkg",
             coverage_file=".coverage."+self.__class__.__name__,
             timeout=20,
         )

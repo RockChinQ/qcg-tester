@@ -116,7 +116,7 @@ async def run_python_with_coverage_async(
     command: str,
     cwd: str = None,
     env: dict = None,
-    source: str = '',
+    source: str = 'pkg,main,config',
     coverage_file: str = '.coverage',
     timeout: int = None,
 ) -> (str, str):
