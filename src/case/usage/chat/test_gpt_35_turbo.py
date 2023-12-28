@@ -10,10 +10,10 @@ from skittles.platform import mirai
 from skittles.entity import bot, connection
 
 from src.util import qcg, system, config
+from src.contrib.mock import mah
 
 
 class TestGPT35Turbo:
-
     @pytest.mark.asyncio
     async def test_gpt_35_turbo(self):
         qcg.ensure_qchatgpt(pwd="resource/")
@@ -56,8 +56,16 @@ class TestGPT35Turbo:
             cwd="resource/QChatGPT",
         )
 
-        api_key = os.environ['OPENAI_API_KEY'] if 'OPENAI_API_KEY' in os.environ else "OPENAI_API_KEY"
-        reverse_proxy = os.environ['OPENAI_REVERSE_PROXY'] if 'OPENAI_REVERSE_PROXY' in os.environ else "OPENAI_REVERSE_PROXY"
+        api_key = (
+            os.environ["OPENAI_API_KEY"]
+            if "OPENAI_API_KEY" in os.environ
+            else "OPENAI_API_KEY"
+        )
+        reverse_proxy = (
+            os.environ["OPENAI_REVERSE_PROXY"]
+            if "OPENAI_REVERSE_PROXY" in os.environ
+            else "OPENAI_REVERSE_PROXY"
+        )
 
         config.ensure_config(
             "openai_config",
@@ -70,68 +78,39 @@ class TestGPT35Turbo:
             cwd="resource/QChatGPT",
         )
 
-        resp = ''
+        resp = ""
 
-        bot_account = [
-            bot.Bot(
-                account_id='12345678',
-                nickname='Bot',
-                connection_types=[connection.ConnectionType.FORWARD_WS]
-            )
-        ]
-
-        app = mirai.MiraiAPIHTTPAdapter()
-
-        @app.action_handler
-        async def handler(bot: bot.Bot, connection_type: connection.ConnectionType, data: str) -> None:
+        async def handler(
+            bot: bot.Bot, connection_type: connection.ConnectionType, data: str
+        ) -> None:
             nonlocal resp
 
             data = json.loads(data)
 
             logging.info(f"Received message: {data}, {type(data)}")
 
-            resp = ''
+            resp = ""
 
-            for message in data['content']['messageChain']:
-                if message['type'] == 'Plain':
-                    resp += message['text']
+            for message in data["content"]["messageChain"]:
+                if message["type"] == "Plain":
+                    resp += message["text"]
+            
+            assert "hello" in resp.lower()
 
-        async def test():
-            await asyncio.sleep(6)
+        data = {
+            "type": "FriendMessage",
+            "sender": {"id": 1010553892, "nickname": "Rock", "remark": ""},
+            "messageChain": [
+                {"type": "Source", "id": 123456, "time": int(time.time())},
+                {"type": "Plain", "text": "Only reply a 'Hello' to me."},
+            ],
+        }
 
-            data = {
-                "type": "FriendMessage",
-                "sender": {"id": 1010553892, "nickname": "Rock", "remark": ""},
-                "messageChain": [
-                    {"type": "Source", "id": 123456, "time": int(time.time())},
-                    {"type": "Plain", "text": "Only reply a 'Hello' to me."},
-                ],
-            }
-
-            await app.emit_event(bots=bot_account, event=data)
-            logging.info("Test message sent.")
-
-            await asyncio.sleep(20)
-
-            logging.info('Killing app.')
-            await app.kill()
-
-            assert 'hello' in resp.lower()
-
-        async def launch():
-            await asyncio.sleep(3)
-            logging.info("Launching QChatGPT.")
-            await system.run_python_with_coverage_async(
-                command="main.py",
-                cwd="resource/QChatGPT",
-                coverage_file=".coverage."+self.__class__.__name__,
-                timeout=18,
-            )
-            logging.info("QChatGPT killed.")
-
-        async def run():
-            tasks = [app.run(bots=bot_account), launch(), test()]
-
-            await asyncio.gather(*tasks)
-
-        await run()
+        mock = mah.MiraiAPIHTTPMock(
+            action_handler=handler,
+            first_data=data,
+            converage_file=".coverage." + self.__class__.__name__,
+            wait_timeout=20,
+        )
+        
+        await mock.run()

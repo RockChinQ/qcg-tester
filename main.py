@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 import pytest
 import coverage
@@ -29,6 +30,8 @@ if __name__ == "__main__":
     print(f"Running tests in {dirs}")
     
     code = pytest.main(dirs)
+
+    time.sleep(1)
 
     # 生成覆盖率报告
     cov.combine_coverage_data(cwd="resource/QChatGPT")

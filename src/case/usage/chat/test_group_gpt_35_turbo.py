@@ -10,6 +10,7 @@ from skittles.platform import mirai
 from skittles.entity import bot, connection
 
 from src.util import qcg, system, config
+from src.contrib.mock import mah
 
 
 class TestGroupGPT35Turbo:
@@ -79,17 +80,8 @@ class TestGroupGPT35Turbo:
 
         resp = ""
 
-        bot_account = [
-            bot.Bot(
-                account_id="12345678",
-                nickname="Bot",
-                connection_types=[connection.ConnectionType.FORWARD_WS],
-            )
-        ]
+        mock: mah.MiraiAPIHTTPMock = None
 
-        app = mirai.MiraiAPIHTTPAdapter()
-
-        @app.action_handler
         async def handler(
             bot: bot.Bot, connection_type: connection.ConnectionType, data: str
         ) -> None:
@@ -100,8 +92,8 @@ class TestGroupGPT35Turbo:
             logging.info(f"Received message: {data}, {type(data)}")
 
             if data["command"] == "memberInfo":
-                await app.send(
-                    bot=bot_account[0],
+                await mock.skittles_app.send(
+                    bot=mock._bots[0],
                     data={
                         "id": 12345678,
                         "memberName": "Bot",
@@ -116,7 +108,11 @@ class TestGroupGPT35Turbo:
                             "honors": ["群聊之火"],
                             "temperature": 100,
                         },
-                        "group": {"id": 12345, "name": "Test Group", "permission": "MEMBER"},
+                        "group": {
+                            "id": 12345,
+                            "name": "Test Group",
+                            "permission": "MEMBER",
+                        },
                     },
                     sync_id=data["syncId"],
                 )
@@ -127,55 +123,35 @@ class TestGroupGPT35Turbo:
                     if message["type"] == "Plain":
                         resp += message["text"]
 
-        async def test():
-            await asyncio.sleep(6)
+                assert "hello" in resp.lower()
 
-            data = {
-                "type": "GroupMessage",
-                "sender": {
-                    "id": 1010553892,
-                    "memberName": "Rock",
-                    "specialTitle": "",
-                    "permission": "OWNER",
-                    "joinTimestamp": 0,
-                    "lastSpeakTimestamp": 0,
-                    "muteTimeRemaining": 0,
-                    "group": {
-                        "id": 123456,
-                        "name": "Test Group",
-                        "permission": "MEMBER",
-                    },
+        data = {
+            "type": "GroupMessage",
+            "sender": {
+                "id": 1010553892,
+                "memberName": "Rock",
+                "specialTitle": "",
+                "permission": "OWNER",
+                "joinTimestamp": 0,
+                "lastSpeakTimestamp": 0,
+                "muteTimeRemaining": 0,
+                "group": {
+                    "id": 123456,
+                    "name": "Test Group",
+                    "permission": "MEMBER",
                 },
-                "messageChain": [
-                    {"type": "Source", "id": 123456, "time": int(time.time())},
-                    {"type": "Plain", "text": "aiOnly reply a 'Hello' to me."},
-                ],
-            }
+            },
+            "messageChain": [
+                {"type": "Source", "id": 123456, "time": int(time.time())},
+                {"type": "Plain", "text": "aiOnly reply a 'Hello' to me."},
+            ],
+        }
 
-            await app.emit_event(bots=bot_account, event=data)
-            logging.info("Test message sent.")
+        mock = mah.MiraiAPIHTTPMock(
+            action_handler=handler,
+            first_data=data,
+            converage_file=".coverage." + self.__class__.__name__,
+            wait_timeout=20,
+        )
 
-            await asyncio.sleep(20)
-
-            logging.info("Killing app.")
-            await app.kill()
-
-            assert "hello" in resp.lower()
-
-        async def launch():
-            await asyncio.sleep(3)
-            logging.info("Launching QChatGPT.")
-            await system.run_python_with_coverage_async(
-                command="main.py",
-                cwd="resource/QChatGPT",
-                coverage_file=".coverage." + self.__class__.__name__,
-                timeout=18,
-            )
-            logging.info("QChatGPT killed.")
-
-        async def run():
-            tasks = [app.run(bots=bot_account), launch(), test()]
-
-            await asyncio.gather(*tasks)
-
-        await run()
+        await mock.run()
