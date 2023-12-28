@@ -12,7 +12,7 @@ from skittles.entity import bot, connection
 from src.util import qcg, system, config
 
 
-class TestGPT35Turbo:
+class TestGroupGPT35Turbo:
     @pytest.mark.asyncio
     async def test_gpt_35_turbo(self):
         qcg.ensure_qchatgpt(pwd="resource/")
