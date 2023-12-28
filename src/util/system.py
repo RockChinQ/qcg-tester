@@ -168,11 +168,11 @@ async def run_python_with_coverage_async(
         # 不要直接kill，而是发送信号
         try:
             process.send_signal(2)
-            await asyncio.sleep(1)
-            process.send_signal(2)
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
             process.send_signal(2)
             await asyncio.sleep(2)
+            process.send_signal(2)
+            await asyncio.sleep(4)
             process.kill()
         except:
             stdout, stderr = await process.communicate()

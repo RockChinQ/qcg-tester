@@ -123,8 +123,6 @@ class TestGroupGPT35Turbo:
                     if message["type"] == "Plain":
                         resp += message["text"]
 
-                assert "hello" in resp.lower()
-
         data = {
             "type": "GroupMessage",
             "sender": {
@@ -155,3 +153,5 @@ class TestGroupGPT35Turbo:
         )
 
         await mock.run()
+
+        assert "hello" in resp.lower()

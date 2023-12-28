@@ -94,8 +94,6 @@ class TestGPT35Turbo:
             for message in data["content"]["messageChain"]:
                 if message["type"] == "Plain":
                     resp += message["text"]
-            
-            assert "hello" in resp.lower()
 
         data = {
             "type": "FriendMessage",
@@ -114,3 +112,5 @@ class TestGPT35Turbo:
         )
         
         await mock.run()
+
+        assert "hello" in resp.lower()
