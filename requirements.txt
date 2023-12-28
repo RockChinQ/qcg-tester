@@ -1,3 +1,4 @@
 pytest
 skittles
 pytest-asyncio
+coverage
