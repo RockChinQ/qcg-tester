@@ -14,6 +14,21 @@ class MiraiAPIHTTPMock:
 
     skittles_app: mirai.MiraiAPIHTTPAdapter
 
+    default_check_config: dict[str, str]={
+        "msg_source_adapter": "'yirimirai'",
+        "admin_qq": "1010553892",
+        "mirai_http_api_config": """{
+    "adapter": "WebSocketAdapter",
+    "host": "localhost",
+    "port": 8182,
+    "verifyKey": "yirimirai",
+    "qq": 12345678
+}""",
+        "completion_api_params": """{
+    "model": "gpt-3.5-turbo",
+}""",
+    }
+
     def __init__(
         self,
         action_handler: typing.Callable[
@@ -30,20 +45,7 @@ class MiraiAPIHTTPMock:
                 connection_types=[connection.ConnectionType.FORWARD_WS],
             )
         ],
-        check_config: dict[str, str]={
-            "msg_source_adapter": "'yirimirai'",
-            "admin_qq": "1010553892",
-            "mirai_http_api_config": """{
-    "adapter": "WebSocketAdapter",
-    "host": "localhost",
-    "port": 8182,
-    "verifyKey": "yirimirai",
-    "qq": 12345678
-}""",
-            "completion_api_params": """{
-    "model": "gpt-3.5-turbo",
-}""",
-        },
+        check_config: dict[str, str]=default_check_config,
         set_openai_config: bool=True,
     ):
         """
@@ -72,7 +74,7 @@ class MiraiAPIHTTPMock:
 
     async def _run_qchatgpt(self):
         """运行 QChatGPT"""
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
 
         if self._converage_file is not None:
             await system.run_python_with_coverage_async(
@@ -84,14 +86,14 @@ class MiraiAPIHTTPMock:
 
     async def _send_first_data(self):
         """发送第一个事件"""
-        await asyncio.sleep(6)
+        await asyncio.sleep(5)
 
         if self._first_data is not None:
             await self.skittles_app.emit_event(bots=self._bots, event=self._first_data)
 
     async def _time_control(self):
         """时间控制"""
-        await asyncio.sleep(self._wait_timeout+8)
+        await asyncio.sleep(self._wait_timeout+7)
 
         await self.skittles_app.kill()
 

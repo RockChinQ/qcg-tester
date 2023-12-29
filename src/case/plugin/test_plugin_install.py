@@ -108,7 +108,7 @@ class TestPluginInstall:
             action_handler=handler,
             first_data=data,
             converage_file=".coverage." + self.__class__.__name__,
-            wait_timeout=20,
+            wait_timeout=15,
         )
 
         await mock.run()

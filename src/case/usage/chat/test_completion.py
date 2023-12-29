@@ -13,9 +13,9 @@ from src.util import qcg, system, config
 from src.contrib.mock import mah
 
 
-class TestGPT35Turbo:
+class TestCompletion:
     @pytest.mark.asyncio
-    async def test_gpt_35_turbo(self):
+    async def test_completion(self):
         qcg.ensure_qchatgpt(pwd="resource/")
 
         system.run_command(
@@ -24,59 +24,10 @@ class TestGPT35Turbo:
             timeout=3,
         )
 
-        config.ensure_config(
-            "msg_source_adapter",
-            "'yirimirai'",
-            cwd="resource/QChatGPT",
-        )
-
-        config.ensure_config(
-            "admin_qq",
-            "1010553892",
-            cwd="resource/QChatGPT",
-        )
-
-        config.ensure_config(
-            "mirai_http_api_config",
-            """{
-    "adapter": "WebSocketAdapter",
-    "host": "localhost",
-    "port": 8182,
-    "verifyKey": "yirimirai",
-    "qq": 12345678
-}""",
-            cwd="resource/QChatGPT",
-        )
-
-        config.ensure_config(
-            "completion_api_params",
-            """{
-    "model": "gpt-3.5-turbo",
-}""",
-            cwd="resource/QChatGPT",
-        )
-
-        api_key = (
-            os.environ["OPENAI_API_KEY"]
-            if "OPENAI_API_KEY" in os.environ
-            else "OPENAI_API_KEY"
-        )
-        reverse_proxy = (
-            os.environ["OPENAI_REVERSE_PROXY"]
-            if "OPENAI_REVERSE_PROXY" in os.environ
-            else "OPENAI_REVERSE_PROXY"
-        )
-
-        config.ensure_config(
-            "openai_config",
-            f"""{{
-    "api_key": {{
-        "default": "{api_key}"
-    }},
-    "reverse_proxy": "{reverse_proxy}"
-}}""",
-            cwd="resource/QChatGPT",
-        )
+        check_config = mah.MiraiAPIHTTPMock.default_check_config.copy()
+        check_config['completion_api_params'] = """{
+    "model": "text-davinci-003",
+}"""
 
         resp = ""
 
@@ -108,9 +59,11 @@ class TestGPT35Turbo:
             action_handler=handler,
             first_data=data,
             converage_file=".coverage." + self.__class__.__name__,
-            wait_timeout=15,
+            wait_timeout=20,
+            check_config=check_config,
         )
         
         await mock.run()
 
-        assert "hello" in resp.lower()
+        assert resp.strip()
+        assert "[bot]" not in resp.lower()
