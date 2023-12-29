@@ -30,6 +30,21 @@ class MiraiAPIHTTPMock:
                 connection_types=[connection.ConnectionType.FORWARD_WS],
             )
         ],
+        check_config: dict[str, str]={
+            "msg_source_adapter": "'yirimirai'",
+            "admin_qq": "1010553892",
+            "mirai_http_api_config": """{
+    "adapter": "WebSocketAdapter",
+    "host": "localhost",
+    "port": 8182,
+    "verifyKey": "yirimirai",
+    "qq": 12345678
+}""",
+            "completion_api_params": """{
+    "model": "gpt-3.5-turbo",
+}""",
+        },
+        set_openai_config: bool=True,
     ):
         """
         初始化控制器
@@ -44,6 +59,8 @@ class MiraiAPIHTTPMock:
         self._converage_file = converage_file
         self._wait_timeout = wait_timeout
         self._bots = bots
+        self._check_config = check_config
+        self._set_openai_config = set_openai_config
 
     async def _run_skittles(self):
         """运行 skittles"""
@@ -82,6 +99,36 @@ class MiraiAPIHTTPMock:
         """以阻塞的方式运行控制器
         达到 wait_timeout 后，结束 QChatGPT 进程和 mock 实例
         """
+
+        for key, value in self._check_config.items():
+            config.ensure_config(
+                key,
+                value,
+                cwd="resource/QChatGPT",
+            )
+
+        if self._set_openai_config:
+            api_key = (
+                os.environ["OPENAI_API_KEY"]
+                if "OPENAI_API_KEY" in os.environ
+                else "OPENAI_API_KEY"
+            )
+            reverse_proxy = (
+                os.environ["OPENAI_REVERSE_PROXY"]
+                if "OPENAI_REVERSE_PROXY" in os.environ
+                else "OPENAI_REVERSE_PROXY"
+            )
+
+            config.ensure_config(
+                "openai_config",
+                f"""{{
+    "api_key": {{
+        "default": "{api_key}"
+    }},
+    "reverse_proxy": "{reverse_proxy}"
+}}""",
+                cwd="resource/QChatGPT",
+            )
 
         tasks = [
             self._run_skittles(),
