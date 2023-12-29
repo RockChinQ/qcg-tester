@@ -44,6 +44,8 @@ def run_command(
         stderr=subprocess.PIPE,
     )
 
+    stdout, stderr = '',''
+
     try:
         stdout, stderr = process.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
