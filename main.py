@@ -5,7 +5,7 @@ import time
 import pytest
 import coverage
 
-from src.util import coverage as cov 
+from src.util import coverage as cov
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S", handlers=[logging.StreamHandler()])

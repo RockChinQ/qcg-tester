@@ -29,6 +29,14 @@ class MiraiAPIHTTPMock:
 }""",
     }
 
+    default_bots: typing.List[bot.Bot]=[
+        bot.Bot(
+            account_id="12345678",
+            nickname="Bot",
+            connection_types=[connection.ConnectionType.FORWARD_WS],
+        )
+    ]
+
     def __init__(
         self,
         action_handler: typing.Callable[
@@ -38,13 +46,7 @@ class MiraiAPIHTTPMock:
         first_data: dict=None,
         converage_file: str=None,
         wait_timeout: int=30,
-        bots: typing.List[bot.Bot]=[
-            bot.Bot(
-                account_id="12345678",
-                nickname="Bot",
-                connection_types=[connection.ConnectionType.FORWARD_WS],
-            )
-        ],
+        bots: typing.List[bot.Bot]=default_bots,
         check_config: dict[str, str]=default_check_config,
         set_openai_config: bool=True,
     ):
