@@ -1,21 +1,17 @@
 import os
-import json
-import asyncio
-import logging
 import time
+import json
 
 import pytest
-
-from skittles.platform import mirai
 from skittles.entity import bot, connection
 
-from src.util import qcg, system, config
 from src.contrib.mock import mah
+from src.util import qcg, system, config
 
-
-class TestGPT35Turbo:
+class TestCommandUsage:
     @pytest.mark.asyncio
-    async def test_gpt_35_turbo(self):
+    async def test_command_usage(self):
+
         qcg.ensure_qchatgpt(pwd="resource/")
 
         system.run_command(
@@ -33,10 +29,6 @@ class TestGPT35Turbo:
 
             data = json.loads(data)
 
-            logging.info(f"Received message: {data}, {type(data)}")
-
-            resp = ""
-
             for message in data["content"]["messageChain"]:
                 if message["type"] == "Plain":
                     resp += message["text"]
@@ -46,7 +38,7 @@ class TestGPT35Turbo:
             "sender": {"id": 1010553892, "nickname": "Rock", "remark": ""},
             "messageChain": [
                 {"type": "Source", "id": 123456, "time": int(time.time())},
-                {"type": "Plain", "text": "Only reply a 'Hello' to me."},
+                {"type": "Plain", "text": "!usage"},
             ],
         }
 
@@ -54,9 +46,9 @@ class TestGPT35Turbo:
             action_handler=handler,
             first_data=data,
             converage_file=".coverage." + self.__class__.__name__,
-            wait_timeout=15,
+            wait_timeout=5,
         )
-        
+
         await mock.run()
 
-        assert "hello" in resp.lower()
+        assert '使用情况' in resp

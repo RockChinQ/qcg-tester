@@ -24,65 +24,11 @@ class TestPluginInstall:
             timeout=2,
         )
 
-        config.ensure_config(
-            "msg_source_adapter",
-            "'yirimirai'",
-            cwd="resource/QChatGPT",
-        )
-
-        config.ensure_config(
-            "admin_qq",
-            "1010553892",
-            cwd="resource/QChatGPT",
-        )
-
-        config.ensure_config(
-            "mirai_http_api_config",
-            """{
-    "adapter": "WebSocketAdapter",
-    "host": "localhost",
-    "port": 8182,
-    "verifyKey": "yirimirai",
-    "qq": 12345678
-}""",
-            cwd="resource/QChatGPT",
-        )
-
-        config.ensure_config(
-            "completion_api_params",
-            """{
-    "model": "gpt-3.5-turbo",
-}""",
-            cwd="resource/QChatGPT",
-        )
-
-        api_key = (
-            os.environ["OPENAI_API_KEY"]
-            if "OPENAI_API_KEY" in os.environ
-            else "OPENAI_API_KEY"
-        )
-        reverse_proxy = (
-            os.environ["OPENAI_REVERSE_PROXY"]
-            if "OPENAI_REVERSE_PROXY" in os.environ
-            else "OPENAI_REVERSE_PROXY"
-        )
-
-        config.ensure_config(
-            "openai_config",
-            f"""{{
-    "api_key": {{
-        "default": "{api_key}"
-    }},
-    "reverse_proxy": "{reverse_proxy}"
-}}""",
-            cwd="resource/QChatGPT",
-        )
-
         resp: list[str] = []
 
         mock: mah.MiraiAPIHTTPMock = None
 
-        msgId = 0
+        msgId = 10000
 
         async def handler(
             bot: bot.Bot, connection_type: connection.ConnectionType, data: str
@@ -128,7 +74,7 @@ class TestPluginInstall:
             action_handler=handler,
             first_data=data,
             converage_file=".coverage." + self.__class__.__name__,
-            wait_timeout=50,
+            wait_timeout=40,
         )
 
         async def send_sequence():

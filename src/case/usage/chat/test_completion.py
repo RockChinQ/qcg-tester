@@ -26,7 +26,7 @@ class TestCompletion:
 
         check_config = mah.MiraiAPIHTTPMock.default_check_config.copy()
         check_config['completion_api_params'] = """{
-    "model": "text-davinci-003",
+    "model": "gpt-3.5-turbo-instruct",
 }"""
 
         resp = ""
@@ -67,3 +67,4 @@ class TestCompletion:
 
         assert resp.strip()
         assert "[bot]" not in resp.lower()
+        assert "hello" in resp.lower()

@@ -27,6 +27,7 @@ class MiraiAPIHTTPMock:
         "completion_api_params": """{
     "model": "gpt-3.5-turbo",
 }""",
+        "blob_message_threshold": "20480"
     }
 
     default_bots: typing.List[bot.Bot]=[
@@ -76,11 +77,11 @@ class MiraiAPIHTTPMock:
 
     async def _run_qchatgpt(self):
         """运行 QChatGPT"""
-        await asyncio.sleep(1)
+        await asyncio.sleep(1.5)
 
         if self._converage_file is not None:
             await system.run_python_with_coverage_async(
-                command="main.py",
+                command="main.py --cov-report",
                 cwd="resource/QChatGPT",
                 coverage_file=self._converage_file,
                 timeout=self._wait_timeout,
@@ -88,14 +89,14 @@ class MiraiAPIHTTPMock:
 
     async def _send_first_data(self):
         """发送第一个事件"""
-        await asyncio.sleep(5)
+        await asyncio.sleep(6)
 
         if self._first_data is not None:
             await self.skittles_app.emit_event(bots=self._bots, event=self._first_data)
 
     async def _time_control(self):
         """时间控制"""
-        await asyncio.sleep(self._wait_timeout+7)
+        await asyncio.sleep(self._wait_timeout+9)
 
         await self.skittles_app.kill()
 
