@@ -89,7 +89,7 @@ class MiraiAPIHTTPMock:
 
     async def _send_first_data(self):
         """发送第一个事件"""
-        await asyncio.sleep(6)
+        await asyncio.sleep(4)
 
         if self._first_data is not None:
             await self.skittles_app.emit_event(bots=self._bots, event=self._first_data)

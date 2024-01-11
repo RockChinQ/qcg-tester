@@ -46,7 +46,7 @@ class TestCommandVersion:
             action_handler=handler,
             first_data=data,
             converage_file=".coverage." + self.__class__.__name__,
-            wait_timeout=5,
+            wait_timeout=8,
         )
 
         await mock.run()
