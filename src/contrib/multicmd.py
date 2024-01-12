@@ -16,17 +16,7 @@ class MultiMessageTester:
 
     _send_msg_id: int = 10000
 
-    event_data_template = {
-        "type": "FriendMessage",
-        "sender": {"id": 1010553892, "nickname": "Rock", "remark": ""},
-        "messageChain": [
-            {"type": "Source", "id": 0, "time": 0},  # id, time changed each time
-            {
-                "type": "Plain",
-                "text": "",  # text changed each time
-            },
-        ],
-    }
+    event_data_template = {}
 
     resp: list[str] = []
 
@@ -34,8 +24,24 @@ class MultiMessageTester:
 
     mock: mah.MiraiAPIHTTPMock = None
 
-    def __init__(self, cases: list[tuple], wait_timeout: int = 15):
+    def __init__(self, cases: list[tuple], wait_timeout: int = 15, coverage_file: str = None):
         self._cases = cases
+
+        self._send_msg_id = 10000
+        self.event_data_template = {
+            "type": "FriendMessage",
+            "sender": {"id": 1010553892, "nickname": "Rock", "remark": ""},
+            "messageChain": [
+                {"type": "Source", "id": 0, "time": 0},  # id, time changed each time
+                {
+                    "type": "Plain",
+                    "text": "",  # text changed each time
+                },
+            ],
+        }
+        self.resp = []
+        self.source_msg_id = 0
+        self.mock = None
 
         async def handler(
             bot: bot.Bot, connection_type: connection.ConnectionType, data: str
@@ -63,7 +69,7 @@ class MultiMessageTester:
 
         self.mock = mah.MiraiAPIHTTPMock(
             action_handler=handler,
-            converage_file=".coverage." + self.__class__.__name__,
+            converage_file=coverage_file,
             wait_timeout=wait_timeout,
         )
 
