@@ -85,6 +85,7 @@ class TestCommandCfg:
         multi_tester = multicmd.MultiMessageTester(
             cases=case_list,
             wait_timeout=sum([x[1] for x in case_list]) + 3,
+            coverage_file=".coverage." + self.__class__.__name__,
         )
 
         resp = await multi_tester.run()
