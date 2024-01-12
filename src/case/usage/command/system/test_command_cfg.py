@@ -27,6 +27,10 @@ class TestCommandCfg:
         # !cfg completion_api_params.model -> 'gpt-3.5-turbo' in resp
         # !cfg completion_api_params.model "gpt-3.5-turbo-16k"
         # !cfg completion_api_params.model -> 'gpt-3.5-turbo-16k' in resp
+        # !cfg completion_api_params {'model':'gpt-3.5-turbo'} -> 修改成功
+        # !cfg abcdefghijkl -> 未找到配置项
+        # !cfg completion_api_params abcdefgh -> 不合法
+        # !cfg completion_api_params.model 123 -> 类型不匹配
 
         cmd_sleep_time = 1.5
 
@@ -55,6 +59,26 @@ class TestCommandCfg:
                 "!cfg completion_api_params.model",
                 cmd_sleep_time,
                 lambda x: "gpt-3.5-turbo-16k" in x,
+            ),
+            (
+                "!cfg completion_api_params {'model':'gpt-3.5-turbo'}",
+                cmd_sleep_time,
+                lambda x: "修改成功" in x,
+            ),
+            (
+                "!cfg abcdefghijkl",
+                cmd_sleep_time,
+                lambda x: "未找到配置项" in x,
+            ),
+            (
+                "!cfg completion_api_params abcdefgh",
+                cmd_sleep_time,
+                lambda x: "不合法" in x,
+            ),
+            (
+                "!cfg completion_api_params.model 123",
+                cmd_sleep_time,
+                lambda x: "类型不匹配" in x,
             ),
         ]
 
