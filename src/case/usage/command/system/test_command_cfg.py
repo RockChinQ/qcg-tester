@@ -1,0 +1,73 @@
+import pytest
+import logging
+
+from src.contrib import multicmd
+from src.util import qcg, system, config
+
+
+class TestCommandCfg:
+    @pytest.mark.asyncio
+    async def test_command_cfg(self):
+        qcg.ensure_qchatgpt(pwd="resource/")
+
+        await system.run_command_async(
+            command="rm -rf database.db",
+            cwd="resource/QChatGPT",
+            timeout=2
+        )
+
+        system.run_command(
+            command="python main.py",
+            cwd="resource/QChatGPT",
+            timeout=2
+        )
+
+        # !cfg all -> 所有配置项 in resp
+        # !cfg completion_api_params -> 'model' in resp
+        # !cfg completion_api_params.model -> 'gpt-3.5-turbo' in resp
+        # !cfg completion_api_params.model "gpt-3.5-turbo-16k"
+        # !cfg completion_api_params.model -> 'gpt-3.5-turbo-16k' in resp
+
+        cmd_sleep_time = 1.5
+
+        case_list = [
+            (
+                "!cfg all",
+                cmd_sleep_time,
+                lambda x: "所有配置项" in x,
+            ),
+            (
+                "!cfg completion_api_params",
+                cmd_sleep_time,
+                lambda x: "model" in x,
+            ),
+            (
+                "!cfg completion_api_params.model",
+                cmd_sleep_time,
+                lambda x: "gpt-3.5-turbo" in x,
+            ),
+            (
+                "!cfg completion_api_params.model \"gpt-3.5-turbo-16k\"",
+                cmd_sleep_time,
+                lambda x: "修改成功" in x,
+            ),
+            (
+                "!cfg completion_api_params.model",
+                cmd_sleep_time,
+                lambda x: "gpt-3.5-turbo-16k" in x,
+            ),
+        ]
+
+        multi_tester = multicmd.MultiMessageTester(
+            cases=case_list,
+            wait_timeout=sum([x[1] for x in case_list]) + 3,
+        )
+
+        resp = await multi_tester.run()
+
+        index = 0
+
+        for case in case_list:
+            logging.info(f"Testing case: {case[0]} {resp[index]}")
+            assert case[2](resp[index])
+            index += 1
