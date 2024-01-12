@@ -49,10 +49,15 @@ class TestCommandSession:
         # 10. what's my name -> 'soulter' in resp
         # 11. !last -> 已切换到前一次的对话
         # 12. !next -> 已切换到后一次的对话
-        # 13. what's my name -> 'soulter' in resp
+        # 13. !resend -> 'soulter' in resp
+        # 14. !list -> 'rock' in resp
+        # 15. !del 1 -> 已删除历史会话
+        # 16. !list -> 'rock' not in resp
+        # 17. !delhst person_1010553892 -> 已删除会话
+        # 18. !default -> '当前所有情景预设' in resp
 
-        cmd_sleep_time = 1.2
-        msg_sleep_time = 7
+        cmd_sleep_time = 1.5
+        msg_sleep_time = 8
 
         case_list = [
             (
@@ -116,10 +121,40 @@ class TestCommandSession:
                 lambda x: "已切换到后一次的对话" in x,
             ),
             (
-                "according to the context, tell me what my name is",
+                "!resend",
                 msg_sleep_time,
                 lambda x: "soulter" in x.lower(),
             ),
+            (
+                "!list",
+                cmd_sleep_time,
+                lambda x: "rock" in x.lower(),
+            ),
+            (
+                "!del 1",
+                cmd_sleep_time,
+                lambda x: "已删除历史会话" in x,
+            ),
+            (
+                "!list",
+                cmd_sleep_time,
+                lambda x: "rock" not in x.lower(),
+            ),
+            (
+                "!delhst person_1010553892",
+                cmd_sleep_time,
+                lambda x: "已删除会话" in x,
+            ),
+            (
+                "!default",
+                cmd_sleep_time,
+                lambda x: "当前所有情景预设" in x,
+            ),
+            # (
+            #     "according to the context, tell me what my name is",
+            #     msg_sleep_time,
+            #     lambda x: "soulter" in x.lower(),
+            # ),
         ]
 
         async def handler(
@@ -163,7 +198,7 @@ class TestCommandSession:
             action_handler=handler,
             first_data=data,
             converage_file=".coverage." + self.__class__.__name__,
-            wait_timeout=65,
+            wait_timeout=75,
         )
 
         async def send_sequence():
