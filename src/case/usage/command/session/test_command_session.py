@@ -131,9 +131,24 @@ class TestCommandSession:
                 lambda x: "rock" in x.lower(),
             ),
             (
+                "!del",
+                cmd_sleep_time,
+                lambda x: "参数不足" in x,
+            ),
+            (
+                "!del abc",
+                cmd_sleep_time,
+                lambda x: "参数错误" in x,
+            ),
+            (
                 "!del 1",
                 cmd_sleep_time,
                 lambda x: "已删除历史会话" in x,
+            ),
+            (
+                "!del all",
+                cmd_sleep_time,
+                lambda x: "已删除所有" in x,
             ),
             (
                 "!list",
@@ -141,15 +156,45 @@ class TestCommandSession:
                 lambda x: "rock" not in x.lower(),
             ),
             (
+                "!delhst",
+                cmd_sleep_time,
+                lambda x: "请输入要删除的会话" in x,
+            ),
+            (
                 "!delhst person_1010553892",
                 cmd_sleep_time,
                 lambda x: "已删除会话" in x,
+            ),
+            (
+                "!delhst all",
+                cmd_sleep_time,
+                lambda x: "已删除所有" in x,
             ),
             (
                 "!default",
                 cmd_sleep_time,
                 lambda x: "当前所有情景预设" in x,
             ),
+            (
+                "!default set default",
+                cmd_sleep_time,
+                lambda x: "已设置默认情景预设" in x,
+            ),
+            (
+                "!default set aaaaa",
+                cmd_sleep_time,
+                lambda x: "没有找到情景预设" in x,
+            ),
+            (
+                "!reset default",
+                cmd_sleep_time,
+                lambda x: "default" in x,
+            ),
+            (
+                "!list 100",
+                cmd_sleep_time,
+                lambda x: "没有历史会话" in x,
+            )
             # (
             #     "according to the context, tell me what my name is",
             #     msg_sleep_time,
@@ -198,7 +243,7 @@ class TestCommandSession:
             action_handler=handler,
             first_data=data,
             converage_file=".coverage." + self.__class__.__name__,
-            wait_timeout=75,
+            wait_timeout=88,
         )
 
         async def send_sequence():
