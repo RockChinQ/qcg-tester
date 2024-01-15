@@ -24,7 +24,7 @@ class MultiMessageTester:
 
     mock: mah.MiraiAPIHTTPMock = None
 
-    def __init__(self, cases: list[tuple], wait_timeout: int = 15, coverage_file: str = None):
+    def __init__(self, cases: list[tuple], wait_timeout: int = 15, coverage_file: str = None, exclude_msg_contains: list[str] = []):
         self._cases = cases
 
         self._send_msg_id = 10000
@@ -65,6 +65,8 @@ class MultiMessageTester:
                 self.mock._bots[0], {"code": 0, "msg": "success", "messageId": self._send_msg_id}, '{}'.format(data["syncId"])
             )
 
+            if any([x in temp_str for x in exclude_msg_contains]):
+                return
             self.resp.append(temp_str)
 
         self.mock = mah.MiraiAPIHTTPMock(

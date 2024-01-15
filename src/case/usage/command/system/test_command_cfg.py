@@ -41,6 +41,11 @@ class TestCommandCfg:
                 lambda x: "所有配置项" in x,
             ),
             (
+                "!~all",
+                cmd_sleep_time,
+                lambda x: "所有配置项" in x,
+            ),
+            (
                 "!cfg completion_api_params",
                 cmd_sleep_time,
                 lambda x: "model" in x,
