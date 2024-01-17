@@ -45,7 +45,7 @@ class TestBlobStrategy:
 
         ]
     
-        config_dict = mah.MiraiAPIHTTPMock.default_check_config
+        config_dict = mah.MiraiAPIHTTPMock.default_check_config.copy()
 
         config_dict['blob_message_threshold'] = "1"
         config_dict['blob_message_strategy'] = '"forward"'
@@ -96,7 +96,8 @@ class TestBlobStrategy:
             cases=case_list,
             wait_timeout=sum([x[1] for x in case_list]),
             coverage_file=".coverage." + self.__class__.__name__,
-            handler=handler
+            handler=handler,
+            config_dict=config_dict
         )
 
         resp = await multi_tester.run()

@@ -28,7 +28,10 @@ class MiraiAPIHTTPMock:
     "model": "gpt-3.5-turbo",
 }""",
         "blob_message_threshold": "20480",
-        "report_usage": "False"
+        "report_usage": "False",
+        "default_prompt": """{
+    "default": "You're a helpful assistant.",
+}"""
     }
 
     default_bots: typing.List[bot.Bot]=[
