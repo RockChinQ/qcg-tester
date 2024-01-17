@@ -24,68 +24,29 @@ class TestGroupGPT35Turbo:
             timeout=3,
         )
 
-        config.ensure_config(
-            "msg_source_adapter",
-            "'yirimirai'",
-            cwd="resource/QChatGPT",
-        )
-
-        config.ensure_config(
-            "admin_qq",
-            "1010553892",
-            cwd="resource/QChatGPT",
-        )
-
-        config.ensure_config(
-            "mirai_http_api_config",
+        config.set_config(
+            "response_rules",
             """{
-    "adapter": "WebSocketAdapter",
-    "host": "localhost",
-    "port": 8182,
-    "verifyKey": "yirimirai",
-    "qq": 12345678
+    "default": {
+        "at": True,  # 是否响应at机器人的消息
+        "prefix": ["/ai", "!ai", "！ai", "ai"],
+        "regexp": ["bot.*"],  # "为什么.*", "怎么?样.*", "怎么.*", "如何.*", "[Hh]ow to.*", "[Ww]hy not.*", "[Ww]hat is.*", ".*怎么办", ".*咋办"
+        "random_rate": 0.0,  # 随机响应概率，0.0-1.0，0.0为不随机响应，1.0为响应所有消息, 仅在前几项判断不通过时生效
+    },
 }""",
-            cwd="resource/QChatGPT",
+            "resource/QChatGPT",
         )
 
-        config.ensure_config(
-            "completion_api_params",
-            """{
-    "model": "gpt-3.5-turbo",
-}""",
-            cwd="resource/QChatGPT",
-        )
-
-        api_key = (
-            os.environ["OPENAI_API_KEY"]
-            if "OPENAI_API_KEY" in os.environ
-            else "OPENAI_API_KEY"
-        )
-        reverse_proxy = (
-            os.environ["OPENAI_REVERSE_PROXY"]
-            if "OPENAI_REVERSE_PROXY" in os.environ
-            else "OPENAI_REVERSE_PROXY"
-        )
-
-        config.ensure_config(
-            "openai_config",
-            f"""{{
-    "api_key": {{
-        "default": "{api_key}"
-    }},
-    "reverse_proxy": "{reverse_proxy}"
-}}""",
-            cwd="resource/QChatGPT",
-        )
-
-        resp = ""
+        resp: list[str] = []
 
         mock: mah.MiraiAPIHTTPMock = None
+
+        send_msg_id = 10000
 
         async def handler(
             bot: bot.Bot, connection_type: connection.ConnectionType, data: str
         ) -> None:
-            nonlocal resp
+            nonlocal resp, send_msg_id
 
             data = json.loads(data)
 
@@ -117,11 +78,20 @@ class TestGroupGPT35Turbo:
                     sync_id=data["syncId"],
                 )
             else:
-                resp = ""
+                temp_str = ""
 
                 for message in data["content"]["messageChain"]:
                     if message["type"] == "Plain":
-                        resp += message["text"]
+                        temp_str += message["text"]
+
+
+                await mock.skittles_app.send(
+                    mock._bots[0], {"code": 0, "msg": "success", "messageId": send_msg_id}, '{}'.format(data["syncId"])
+                )
+
+                send_msg_id += 1
+                
+                resp.append(temp_str)
 
         data = {
             "type": "GroupMessage",
@@ -149,9 +119,40 @@ class TestGroupGPT35Turbo:
             action_handler=handler,
             first_data=data,
             converage_file=".coverage." + self.__class__.__name__,
-            wait_timeout=20,
+            wait_timeout=25,
         )
 
-        await mock.run()
+        async def send_sequence():
+            await asyncio.sleep(10)
 
-        assert "hello" in resp.lower()
+            data["messageChain"] = [
+                {"type": "Source", "id": 123457, "time": int(time.time())},
+                {"type": "Plain", "text": "bot, Only reply a 'Hello' to me."},
+            ]
+            await mock.skittles_app.send(
+                mock._bots[0],
+                data,
+                "-1"
+            )
+            await asyncio.sleep(8)
+
+            data["messageChain"] = [
+                {"type": "Source", "id": 123458, "time": int(time.time())},
+                {"type": "At", "target": 12345678, "display": ""},
+                {"type": "Plain", "text": "Only reply a 'Hello' to me."},
+            ]
+            await mock.skittles_app.send(
+                mock._bots[0],
+                data,
+                "-1"
+            )
+            await asyncio.sleep(8)
+
+
+        await asyncio.gather(mock.run(), send_sequence())
+
+        print(resp)
+
+        assert "hello" in resp[0].lower()
+        assert "hello" in resp[1].lower()
+        assert "hello" in resp[2].lower()
