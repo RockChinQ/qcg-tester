@@ -5,9 +5,9 @@ from src.contrib import multicmd
 from src.util import qcg, system, config
 
 
-class TestCommandFunc:
+class TestPluginCommand:
     @pytest.mark.asyncio
-    async def test_command_func(self):
+    async def test_plugin_command(self):
         qcg.ensure_qchatgpt(pwd="resource/")
 
         await system.run_command_async(
@@ -36,10 +36,45 @@ class TestCommandFunc:
                 lambda x: "重载完成" in x,
             ),
             (
-                "!func",
+                "!plugin",
                 cmd_sleep_time,
                 lambda x: "Webwlkr" in x,
-            )
+            ),
+            (
+                "!plugin off Webwlkr",
+                cmd_sleep_time,
+                lambda x: "已禁用" in x,
+            ),
+            (
+                "!plugin",
+                cmd_sleep_time,
+                lambda x: "已禁用" in x,
+            ),
+            (
+                "!plugin on Webwlkr",
+                cmd_sleep_time,
+                lambda x: "已启用" in x,
+            ),
+            (
+                "!plugin",
+                cmd_sleep_time,
+                lambda x: "已禁用" not in x,
+            ),
+            (
+                "!plugin on abcdefg",
+                cmd_sleep_time,
+                lambda x: "未找到插件" in x,
+            ),
+            (
+                "!plugin update Webwlkr",
+                cmd_sleep_time + 3,
+                lambda x: "已更新" in x,
+            ),
+            (
+                "!plugin del Webwlkr",
+                cmd_sleep_time,
+                lambda x: "已删除" in x,
+            ),
         ]
 
         multi_tester = multicmd.MultiMessageTester(
@@ -47,7 +82,8 @@ class TestCommandFunc:
             wait_timeout=sum([x[1] for x in case_list]) + 3,
             coverage_file=".coverage." + self.__class__.__name__,
             exclude_msg_contains=[
-                "正在安装插件"
+                "正在安装插件",
+                "正在更新插件"
             ]
         )
 
