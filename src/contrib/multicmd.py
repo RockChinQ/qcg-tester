@@ -11,7 +11,6 @@ from .mock import mah
 
 
 class MultiMessageTester:
-
     _cases: list[tuple]
 
     _send_msg_id: int = 10000
@@ -24,7 +23,15 @@ class MultiMessageTester:
 
     mock: mah.MiraiAPIHTTPMock = None
 
-    def __init__(self, cases: list[tuple], wait_timeout: int = 15, coverage_file: str = None, exclude_msg_contains: list[str] = []):
+    def __init__(
+        self,
+        cases: list[tuple],
+        wait_timeout: int = 15,
+        coverage_file: str = None,
+        exclude_msg_contains: list[str] = [],
+        config_dict: dict = {},
+        handler=None,
+    ):
         self._cases = cases
 
         self._send_msg_id = 10000
@@ -43,41 +50,45 @@ class MultiMessageTester:
         self.source_msg_id = 0
         self.mock = None
 
-        async def handler(
-            bot: bot.Bot, connection_type: connection.ConnectionType, data: str
-        ) -> None:
-            
-            data = json.loads(data)
+        if not handler:
+            async def handler(
+                bot: bot.Bot, connection_type: connection.ConnectionType, data: str
+            ) -> None:
+                data = json.loads(data)
 
-            logging.info(
-                f"received data: {data} {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-            )
+                logging.info(
+                    f"received data: {data} {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                )
 
-            temp_str = ""
+                temp_str = ""
 
-            for message in data["content"]["messageChain"]:
-                if message["type"] == "Plain":
-                    temp_str += message["text"]
+                for message in data["content"]["messageChain"]:
+                    if message["type"] == "Plain":
+                        temp_str += message["text"]
 
-            self._send_msg_id += 1
+                self._send_msg_id += 1
 
-            await self.mock.skittles_app.send(
-                self.mock._bots[0], {"code": 0, "msg": "success", "messageId": self._send_msg_id}, '{}'.format(data["syncId"])
-            )
+                await self.mock.skittles_app.send(
+                    self.mock._bots[0],
+                    {"code": 0, "msg": "success", "messageId": self._send_msg_id},
+                    "{}".format(data["syncId"]),
+                )
 
-            if any([x in temp_str for x in exclude_msg_contains]):
-                return
-            self.resp.append(temp_str)
+                if any([x in temp_str for x in exclude_msg_contains]):
+                    return
+                self.resp.append(temp_str)
+
+        if config_dict == {}:
+            config_dict = mah.MiraiAPIHTTPMock.default_check_config
 
         self.mock = mah.MiraiAPIHTTPMock(
             action_handler=handler,
             converage_file=coverage_file,
             wait_timeout=wait_timeout,
+            check_config=config_dict,
         )
 
-
     async def run(self) -> list[str]:
-        
         async def send_sequence():
             await asyncio.sleep(4)
 
